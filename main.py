@@ -9,6 +9,7 @@ buttonManual = Pin(8, Pin.IN, Pin.PULL_UP) # Manual
 ledYellow = Pin(21, Pin.OUT) #Start/Stop LED
 ledGreen = Pin(20, Pin.OUT) #Reverse LED
 ledRed = Pin(22, Pin.OUT) #Reset LED
+buzzer = Pin(26, Pin.OUT) #Buzzer
 buttonPressed = 1 # PULL_UP so 1 is not pressed
 onOff = 0 # by default don't start the counter
 reverse = 0 # by default forword
@@ -89,6 +90,7 @@ def waitAndDetectButtonPress(seconds):
             break
         elif buttonReset.value() == 0:
             ledRed.toggle()
+            buzzer.value(1)
             print("Reset")
             setZero()
             if onOff == 1:
@@ -100,12 +102,43 @@ def waitAndDetectButtonPress(seconds):
             nextNumberPlus = 1
             nextNumberMinus = 9
             while buttonReset.value() == 0:
-                utime.sleep(0.5)
+                utime.sleep(0.6)
             ledRed.toggle()
+            buzzer.value(0)
+            break
+        elif buttonManual.value() == 0:
+            while buttonManual.value() == 0:
+                manualCounterFunction()
             break
         else:
             utime.sleep(0.01)
             waitTime = waitTime - 1
+            
+def manualCounterFunction():
+    global nextNumberPlus
+    global nextNumberMinus
+    buzzer.value(1)
+    if reverse == 0:
+        for j in range(len(pins)-1):
+            pins[j].value(digits[nextNumberPlus][j]) 
+        if nextNumberPlus == 9:
+            nextNumberPlus = 0
+        else:
+            nextNumberMinus = nextNumberPlus - 1
+            nextNumberPlus = nextNumberPlus + 1
+    else:
+        for j in range(len(pins)-1,-1,-1):
+            pins[j].value(digits[nextNumberMinus][j]) 
+        if nextNumberMinus == 0:
+            nextNumberMinus = 9
+        else:
+            nextNumberPlus = nextNumberMinus + 1
+            nextNumberMinus = nextNumberMinus - 1
+            
+    utime.sleep(0.1)
+    buzzer.value(0)
+    utime.sleep(0.4)
+    
 
 def countFunction():
     global nextNumberPlus
@@ -115,7 +148,7 @@ def countFunction():
         if onOff == 1: # On
             i = nextNumberPlus
             while i <= 9:
-                #print(nextNumberPlus)
+               #print(nextNumberPlus)
                 if onOff == 1 and reverse == 0:
                     for j in range(len(pins)-1):
                         pins[j].value(digits[i][j])
